@@ -1,3 +1,5 @@
+import axios, { AxiosResponse } from 'axios';
+
 enum Method {
     GET = 'GET',
     POST = 'POST',
@@ -6,9 +8,9 @@ enum Method {
     DELETE = 'DELETE'
 }
 
-class HttpRequestBuilder {
+export class HttpRequestBuilder<R = any, D = any> {
     private method: Method = Method.GET;
-    private body: any = null;
+    private data: D;
     private headers: Record<string, string> = {};
 
     constructor(private url: string) { }
@@ -18,8 +20,8 @@ class HttpRequestBuilder {
         return this;
     }
 
-    addBody(body: any): this {
-        this.body = body;
+    addData(data: D): this {
+        this.data = data;
         return this;
     }
 
@@ -28,16 +30,19 @@ class HttpRequestBuilder {
         return this;
     }
 
-    exec(): Promise<Response> {
-        return fetch(this.url, {
+    exec(): Promise<AxiosResponse<R, D>> {
+        return axios<R, AxiosResponse<R>, D>(this.url, {
             method: this.method,
-            body: this.body,
+            data: this.data,
             headers: this.headers
         });
     }
 }
 
 const httpRequest = new HttpRequestBuilder('http://example.com')
-    .addBody(new FormData())
-    .addHeader('Content-Type', 'multipart/form-data')
-    .addMethod(Method.POST);
+    .addHeader('Content-Type', 'application/json')
+    .addMethod(Method.POST)
+    .addData({ id: 16 })
+    .exec()
+    .then(console.log)
+    .catch(console.log);
